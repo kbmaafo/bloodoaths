@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BloodOaths - File Viewer</title>
+  <style>
+    body {
+      font-family: Poppins, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      width: 90%;
+      max-width: 700px;
+      background: #1e293b;
+      padding: 20px 30px;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+    h1 { text-align: center; color: #38bdf8; }
+    #displayArea {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 15px;
+      min-height: 300px;
+      white-space: pre-wrap;
+      overflow-y: auto;
+    }
+    embed {
+      width: 100%;
+      height: 500px;
+      border-radius: 8px;
+      display: none;
+    }
+    a.back-btn {
+      display: inline-block;
+      margin-top: 10px;
+      background: #38bdf8;
+      color: #0f172a;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a.back-btn:hover {
+      background: #0ea5e9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BloodOaths Viewer</h1>
+    <div id="displayArea"></div>
+    <embed id="pdfViewer" type="application/pdf" />
+    <a href="https://kbmaafo.github.io/bloodoaths/" class="back-btn">← Back to Uploader</a>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get("type");
+    const data = urlParams.get("data");
+    const displayArea = document.getElementById("displayArea");
+    const pdfViewer = document.getElementById("pdfViewer");
+
+    if (!data || !type) {
+      displayArea.textContent = "Error: No file to view.";
+    } else if (type === "text") {
+      displayArea.textContent = decodeURIComponent(atob(data));
+    } else if (type === "pdf") {
+      pdfViewer.src = decodeURIComponent(data);
+      pdfViewer.style.display = "block";
+      displayArea.style.display = "none";
+    }
+  </script>
+</body>
+</html>
