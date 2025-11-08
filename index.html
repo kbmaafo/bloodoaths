@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BloodOaths - File Uploader</title>
+  <style>
+    body {
+      font-family: Poppins, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      width: 90%;
+      max-width: 700px;
+      background: #1e293b;
+      padding: 25px 35px;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+    h1 { text-align: center; color: #38bdf8; }
+    input, textarea, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #0f172a;
+      color: #f8fafc;
+      font-size: 14px;
+    }
+    button {
+      background: #38bdf8;
+      color: #0f172a;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover { background: #0ea5e9; }
+    #share-section { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BloodOaths Uploader</h1>
+    <input type="file" id="fileInput" accept=".txt,.pdf" />
+    <textarea id="fileContent" placeholder="Or paste text here..."></textarea>
+    <input type="text" id="filename" placeholder="Enter file name (e.g. story.txt)" />
+    <button id="generateLink">Generate View Link</button>
+
+    <div id="share-section">
+      <p>Share this link:</p>
+      <input type="text" id="shareLink" readonly />
+      <button id="copyLink">Copy Link</button>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const generateLink = document.getElementById("generateLink");
+    const shareSection = document.getElementById("share-section");
+    const shareLink = document.getElementById("shareLink");
+    const copyLink = document.getElementById("copyLink");
+
+    generateLink.onclick = async () => {
+      const filename = document.getElementById("filename").value.trim();
+      const file = fileInput.files[0];
+      const text = document.getElementById("fileContent").value.trim();
+
+      if (!filename) return alert("Enter a file name.");
+      if (!file && !text) return alert("Upload or paste a file.");
+
+      // Encode content directly in URL (small files only)
+      let data = "";
+      let type = "";
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          if (file.type === "application/pdf") {
+            data = encodeURIComponent(e.target.result);
+            type = "pdf";
+          } else {
+            data = btoa(encodeURIComponent(e.target.result));
+            type = "text";
+          }
+          createLink(data, type);
+        };
+        if (file.type === "application/pdf") reader.readAsDataURL(file);
+        else reader.readAsText(file);
+      } else {
+        data = btoa(encodeURIComponent(text));
+        type = "text";
+        createLink(data, type);
+      }
+    };
+
+    function createLink(data, type) {
+      const base = "https://kbmaafo.github.io/bloodoaths/";
+      const url = `${base}viewer.html?type=${type}&data=${data}`;
+      shareLink.value = url;
+      shareSection.style.display = "block";
+    }
+
+    copyLink.onclick = () => {
+      shareLink.select();
+      document.execCommand("copy");
+      copyLink.textContent = "Copied!";
+      setTimeout(() => (copyLink.textContent = "Copy Link"), 2000);
+    };
+  </script>
+</body>
+</html>
