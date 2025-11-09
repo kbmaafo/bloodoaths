@@ -49,9 +49,8 @@
   <div class="container">
     <h1>BloodOaths Uploader</h1>
     <input type="file" id="fileInput" accept=".txt,.pdf" />
-    <textarea id="fileContent" placeholder="Or paste text here..."></textarea>
     <input type="text" id="filename" placeholder="Enter file name (e.g. story.txt)" />
-    <button id="generateLink">Generate View Link</button>
+    <button id="uploadBtn">Upload to GitHub</button>
 
     <div id="share-section">
       <p>Share this link:</p>
@@ -61,50 +60,57 @@
   </div>
 
   <script>
-    const fileInput = document.getElementById("fileInput");
-    const generateLink = document.getElementById("generateLink");
+    const uploadBtn = document.getElementById("uploadBtn");
     const shareSection = document.getElementById("share-section");
     const shareLink = document.getElementById("shareLink");
     const copyLink = document.getElementById("copyLink");
+    const fileInput = document.getElementById("fileInput");
 
-    generateLink.onclick = async () => {
+    uploadBtn.onclick = async () => {
       const filename = document.getElementById("filename").value.trim();
       const file = fileInput.files[0];
-      const text = document.getElementById("fileContent").value.trim();
+      if (!file) return alert("Select a file to upload.");
+      if (!filename) return alert("Enter a file name (e.g. notes.txt)");
 
-      if (!filename) return alert("Enter a file name.");
-      if (!file && !text) return alert("Upload or paste a file.");
+      const token = prompt("Enter your GitHub token (only you can see this):");
+      if (!token) return alert("You must enter your token to upload.");
 
-      // Encode content directly in URL (small files only)
-      let data = "";
-      let type = "";
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          if (file.type === "application/pdf") {
-            data = encodeURIComponent(e.target.result);
-            type = "pdf";
-          } else {
-            data = btoa(encodeURIComponent(e.target.result));
-            type = "text";
-          }
-          createLink(data, type);
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const contentBase64 = btoa(
+          String.fromCharCode(...new Uint8Array(e.target.result))
+        );
+
+        const body = {
+          message: `Upload ${filename}`,
+          content: contentBase64
         };
-        if (file.type === "application/pdf") reader.readAsDataURL(file);
-        else reader.readAsText(file);
-      } else {
-        data = btoa(encodeURIComponent(text));
-        type = "text";
-        createLink(data, type);
-      }
-    };
 
-    function createLink(data, type) {
-      const base = "https://kbmaafo.github.io/bloodoaths/";
-      const url = `${base}viewer.html?type=${type}&data=${data}`;
-      shareLink.value = url;
-      shareSection.style.display = "block";
-    }
+        const username = "kbmaafo";
+        const repo = "bloodoaths";
+        const branch = "main";
+        const url = `https://api.github.com/repos/${username}/${repo}/contents/files/${filename}`;
+
+        const res = await fetch(url, {
+          method: "PUT",
+          headers: {
+            Authorization: `token ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (res.ok) {
+          const fileUrl = `https://${username}.github.io/${repo}/files/${filename}`;
+          const viewerUrl = `https://${username}.github.io/${repo}/viewer.html?file=${fileUrl}`;
+          shareLink.value = viewerUrl;
+          shareSection.style.display = "block";
+        } else {
+          alert("Upload failed. Check your token or permissions.");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    };
 
     copyLink.onclick = () => {
       shareLink.select();
